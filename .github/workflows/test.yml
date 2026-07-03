@@ -1,0 +1,48 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Default (sigstore) verification across every supported runner family:
+  # linux x86_64 / arm64, macOS arm64 / x86_64 — the four release targets.
+  sigstore:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-13]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: setup
+        uses: ./
+        with:
+          verify: sigstore
+      - name: Astrid is installed, verified, and on PATH
+        run: |
+          set -euo pipefail
+          astrid --version
+          command -v astrid
+          command -v astrid-build
+          command -v astrid-daemon
+          command -v astrid-emit
+          test -n "${{ steps.setup.outputs.version }}"
+          echo "installed astrid ${{ steps.setup.outputs.version }}"
+
+  # Checksum-only mode + a pinned version.
+  checksum-pinned:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          version: "0.9.2"
+          verify: checksum
+      - name: Installed the pinned version
+        run: astrid --version | grep -F "0.9.2"
