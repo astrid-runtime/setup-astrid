@@ -1,6 +1,6 @@
 # setup-astrid
 
-A GitHub Action that installs the [Astrid](https://github.com/unicity-astrid/astrid) CLI
+A GitHub Action that installs the [Astrid](https://github.com/astrid-runtime/astrid) CLI
 (`astrid`, `astrid-daemon`, `astrid-build`, `astrid-emit`) onto a CI runner and puts it on
 `PATH` — so a later step can run `astrid capsule check`, build a capsule, or anything else,
 in one line.
@@ -13,14 +13,14 @@ release workflow's identity), and the downloaded archive is checked against thos
 ## Usage
 
 ```yaml
-- uses: unicity-astrid/setup-astrid@v1
+- uses: astrid-runtime/setup-astrid@v2
 - run: astrid capsule check
 ```
 
 Pin a version and run a full capsule build:
 
 ```yaml
-- uses: unicity-astrid/setup-astrid@v1
+- uses: astrid-runtime/setup-astrid@v2
   with:
     version: "0.9.2"
 - run: astrid build
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: unicity-astrid/setup-astrid@v1
+      - uses: astrid-runtime/setup-astrid@v2
       - run: astrid capsule check      # non-zero exit fails the job
 ```
 
@@ -45,9 +45,14 @@ jobs:
 | Input | Default | Description |
 |-------|---------|-------------|
 | `version` | `latest` | Astrid version to install (e.g. `0.9.2`), or `latest`. |
-| `repository` | `unicity-astrid/astrid` | Owner/repo to install the release from (override for a fork or mirror). |
+| `repository` | `astrid-runtime/astrid` | Owner/repo to install the release from (override for a fork, mirror, or historical Astrid release). |
 | `verify` | `sigstore` | `sigstore` (cosign provenance + integrity), `checksum` (SHA256 integrity only, no extra tooling), or `none` (not recommended). |
 | `certificate-identity` | *(derived)* | Advanced: override the expected cosign certificate identity. Defaults to the `release.yml` workflow of `repository` at the version tag. |
+
+Historical Astrid releases published before the organization transfer retain the
+`unicity-astrid/astrid` Sigstore workflow identity. To install one with this action,
+set `repository: unicity-astrid/astrid`; GitHub resolves the release redirect while
+the action verifies the original certificate identity.
 | `github-token` | `${{ github.token }}` | Token for the release lookup and asset downloads. |
 
 ## Outputs

@@ -1,6 +1,6 @@
 name: "Setup Astrid"
 description: "Install the Astrid CLI (astrid, astrid-daemon, astrid-build, astrid-emit) into a CI runner, with sigstore provenance / SHA256 verification."
-author: "Unicity Labs"
+author: "Astrid contributors"
 branding:
   icon: "box"
   color: "purple"
@@ -13,7 +13,7 @@ inputs:
   repository:
     description: "GitHub owner/repo to install the release from (override for a fork or a mirror)."
     required: false
-    default: "unicity-astrid/astrid"
+    default: "astrid-runtime/astrid"
   verify:
     description: >-
       Artifact verification mode: 'sigstore' (cosign — verifies the release's
