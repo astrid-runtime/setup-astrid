@@ -50,9 +50,9 @@ jobs:
 | `certificate-identity` | *(derived)* | Advanced: override the expected cosign certificate identity. Defaults to the `release.yml` workflow of `repository` at the version tag. |
 
 Historical Astrid releases published before the organization transfer retain the
-`unicity-astrid/astrid` Sigstore workflow identity. To install one with this action,
-set `repository: unicity-astrid/astrid`; GitHub resolves the release redirect while
-the action verifies the original certificate identity.
+`unicity-astrid/astrid` Sigstore workflow identity. The default Astrid Runtime
+repository automatically retries that historical identity when needed. Forks and an
+explicit `certificate-identity` override still require an exact identity match.
 | `github-token` | `${{ github.token }}` | Token for the release lookup and asset downloads. |
 
 ## Outputs
