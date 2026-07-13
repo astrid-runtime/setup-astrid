@@ -1,6 +1,6 @@
 name: "Setup Astrid"
 description: "Install the Astrid CLI (astrid, astrid-daemon, astrid-build, astrid-emit) into a CI runner, with sigstore provenance / SHA256 verification."
-author: "Unicity Labs"
+author: "Astrid contributors"
 branding:
   icon: "box"
   color: "purple"
@@ -13,7 +13,7 @@ inputs:
   repository:
     description: "GitHub owner/repo to install the release from (override for a fork or a mirror)."
     required: false
-    default: "unicity-astrid/astrid"
+    default: "astrid-runtime/astrid"
   verify:
     description: >-
       Artifact verification mode: 'sigstore' (cosign — verifies the release's
@@ -148,15 +148,31 @@ runs:
             if [ -z "${identity}" ]; then
               identity="https://github.com/${REPO}/.github/workflows/release.yml@refs/tags/${TAG}"
             fi
-            echo "setup-astrid: verifying SHA256SUMS.txt provenance via cosign (identity: ${identity})"
             # Authenticity: the checksums file carries a keyless signature bound
             # to the release workflow's GitHub OIDC identity. Verify that, then
             # check the archive against the now-trusted checksums.
-            cosign verify-blob \
-              --bundle "SHA256SUMS.txt.sigstore.json" \
-              --certificate-identity "${identity}" \
-              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-              "SHA256SUMS.txt"
+            verify_identity() {
+              local expected="$1"
+              echo "setup-astrid: verifying SHA256SUMS.txt provenance via cosign (identity: ${expected})"
+              cosign verify-blob \
+                --bundle "SHA256SUMS.txt.sigstore.json" \
+                --certificate-identity "${expected}" \
+                --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+                "SHA256SUMS.txt"
+            }
+
+            if ! verify_identity "${identity}"; then
+              # Releases made before the organization transfer retain their
+              # original GitHub OIDC workflow identity. Only the new canonical
+              # repository gets this narrow fallback; forks and explicit
+              # overrides must match exactly as requested.
+              if [ -n "${CERT_ID_OVERRIDE}" ] || [ "${REPO}" != "astrid-runtime/astrid" ]; then
+                exit 1
+              fi
+              legacy_identity="https://github.com/unicity-astrid/astrid/.github/workflows/release.yml@refs/tags/${TAG}"
+              echo "setup-astrid: retrying historical Astrid release identity"
+              verify_identity "${legacy_identity}"
+            fi
             verify_checksum
             ;;
           checksum)
