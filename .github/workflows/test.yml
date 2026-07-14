@@ -10,6 +10,13 @@ permissions:
   contents: read
 
 jobs:
+  identity-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify current, historical, fork, and override identity policy
+        run: scripts/test-release-identity.sh
+
   # Default (sigstore) verification across every supported runner family:
   # linux x86_64 / arm64, macOS arm64 / x86_64 — the four release targets.
   sigstore:
