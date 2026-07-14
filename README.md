@@ -48,12 +48,20 @@ jobs:
 | `repository` | `astrid-runtime/astrid` | Owner/repo to install the release from (override for a fork, mirror, or historical Astrid release). |
 | `verify` | `sigstore` | `sigstore` (cosign provenance + integrity), `checksum` (SHA256 integrity only, no extra tooling), or `none` (not recommended). |
 | `certificate-identity` | *(derived)* | Advanced: override the expected cosign certificate identity. Defaults to the `release.yml` workflow of `repository` at the version tag. |
+| `github-token` | `${{ github.token }}` | Token for the release lookup and asset downloads. |
 
 Historical Astrid releases published before the organization transfer retain the
 `unicity-astrid/astrid` Sigstore workflow identity. The default Astrid Runtime
 repository automatically retries that historical identity when needed. Forks and an
 explicit `certificate-identity` override still require an exact identity match.
-| `github-token` | `${{ github.token }}` | Token for the release lookup and asset downloads. |
+
+## Moving from v1
+
+`v1` remains pinned to the original action implementation and continues to work
+through GitHub's repository redirects. `v2` uses the canonical
+`astrid-runtime/astrid` release repository and can verify both the current
+Sigstore workflow identity and the historical `unicity-astrid/astrid` identity.
+See [RELEASING.md](RELEASING.md) for the signed-tag release procedure.
 
 ## Outputs
 

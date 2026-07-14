@@ -117,6 +117,7 @@ runs:
         REPO: ${{ inputs.repository }}
         TAG: ${{ steps.resolve.outputs.tag }}
         CERT_ID_OVERRIDE: ${{ inputs.certificate-identity }}
+        ACTION_PATH: ${{ github.action_path }}
       run: |
         set -euo pipefail
         cd "${DIR}"
@@ -144,35 +145,11 @@ runs:
 
         case "${VERIFY}" in
           sigstore)
-            identity="${CERT_ID_OVERRIDE}"
-            if [ -z "${identity}" ]; then
-              identity="https://github.com/${REPO}/.github/workflows/release.yml@refs/tags/${TAG}"
-            fi
             # Authenticity: the checksums file carries a keyless signature bound
             # to the release workflow's GitHub OIDC identity. Verify that, then
             # check the archive against the now-trusted checksums.
-            verify_identity() {
-              local expected="$1"
-              echo "setup-astrid: verifying SHA256SUMS.txt provenance via cosign (identity: ${expected})"
-              cosign verify-blob \
-                --bundle "SHA256SUMS.txt.sigstore.json" \
-                --certificate-identity "${expected}" \
-                --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-                "SHA256SUMS.txt"
-            }
-
-            if ! verify_identity "${identity}"; then
-              # Releases made before the organization transfer retain their
-              # original GitHub OIDC workflow identity. Only the new canonical
-              # repository gets this narrow fallback; forks and explicit
-              # overrides must match exactly as requested.
-              if [ -n "${CERT_ID_OVERRIDE}" ] || [ "${REPO}" != "astrid-runtime/astrid" ]; then
-                exit 1
-              fi
-              legacy_identity="https://github.com/unicity-astrid/astrid/.github/workflows/release.yml@refs/tags/${TAG}"
-              echo "setup-astrid: retrying historical Astrid release identity"
-              verify_identity "${legacy_identity}"
-            fi
+            "${ACTION_PATH}/scripts/verify-release-identity.sh" \
+              "${REPO}" "${TAG}" "${CERT_ID_OVERRIDE}"
             verify_checksum
             ;;
           checksum)
